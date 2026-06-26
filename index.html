@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🃏 タロット占い</title>
+<style>
+  /* ===== Google Fonts ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Noto+Sans+JP:wght@300;400;500&display=swap');
+
+  /* ===== CSS変数（カラーパレット） ===== */
+  :root {
+    --bg:        #1e1035;   /* 深い夜紫 */
+    --bg2:       #2a1650;   /* カード背景 */
+    --accent:    #c89cff;   /* 薄紫ゴールド */
+    --gold:      #e8c97e;   /* ゴールド */
+    --text:      #e8e0f0;   /* メインテキスト */
+    --muted:     #8a7aa0;   /* サブテキスト */
+    --border:    rgba(200,156,255,0.2);
+    --glow:      rgba(200,156,255,0.15);
+    --upright:   #90e0b0;   /* 正位置・緑 */
+    --reversed:  #ffb347;   /* 逆位置・オレンジ */
+  }
+
+  /* ===== リセット・ベース ===== */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ===== 背景の星 ===== */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 20% 20%, rgba(100,50,180,0.15) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 80%, rgba(60,20,120,0.2) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ===== レイアウト ===== */
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  /* ===== タイトル ===== */
+  header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .title-en {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1.8rem, 5vw, 2.8rem);
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    text-shadow: 0 0 40px rgba(200,156,255,0.4);
+    display: block;
+  }
+
+  .title-jp {
+    font-size: 0.8rem;
+    letter-spacing: 0.4em;
+    color: var(--muted);
+    margin-top: 6px;
+    display: block;
+  }
+
+  .divider {
+    width: 120px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 20px auto 0;
+  }
+
+  /* ===== フォームエリア ===== */
+  .form-area {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    margin-bottom: 32px;
+    backdrop-filter: blur(10px);
+  }
+
+  .form-label {
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  .question-input {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    margin-bottom: 24px;
+  }
+
+  .question-input::placeholder { color: var(--muted); }
+  .question-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--glow);
+  }
+
+  /* ===== モード選択タブ ===== */
+  .mode-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .mode-tab {
+    flex: 1;
+    padding: 10px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--muted);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+  }
+
+  .mode-tab.active {
+    background: var(--glow);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* ===== テーマ選択 ===== */
+  .theme-select {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 18px;
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.9rem;
+    outline: none;
+    cursor: pointer;
+    margin-bottom: 4px;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a7aa0' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    display: none;
+  }
+
+  .theme-select.visible { display: block; }
+  .theme-select option { background: var(--bg2); }
+
+  /* ===== 占うボタン ===== */
+  .draw-btn {
+    width: 100%;
+    margin-top: 24px;
+    padding: 16px;
+    background: linear-gradient(135deg, #6b2fa0, #9b4dca);
+    border: none;
+    border-radius: 14px;
+    color: #fff;
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .draw-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .draw-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(155,77,202,0.4);
+  }
+
+  .draw-btn:hover::after { opacity: 1; }
+  .draw-btn:active { transform: translateY(0); }
+
+  /* ===== 結果エリア ===== */
+  #result-area { display: none; }
+
+  .result-question {
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    margin-bottom: 24px;
+  }
+
+  /* ===== カード ===== */
+  .cards-wrapper {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .card {
+    flex: 1;
+    min-width: 200px;
+    max-width: 300px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px 24px;
+    animation: cardReveal 0.6s cubic-bezier(0.34,1.56,0.64,1) both;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at center, var(--glow) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  @keyframes cardReveal {
+    from { opacity: 0; transform: translateY(30px) rotateX(10deg) scale(0.95); }
+    to   { opacity: 1; transform: translateY(0)   rotateX(0deg)  scale(1); }
+  }
+
+  .card:nth-child(2) { animation-delay: 0.15s; }
+  .card:nth-child(3) { animation-delay: 0.30s; }
+
+  .card-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .card-suit {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .card-emoji {
+    font-size: 2rem;
+    margin-bottom: 8px;
+    display: block;
+    filter: drop-shadow(0 0 12px rgba(200,156,255,0.5));
+  }
+
+  .card-name {
+    font-family: 'Cinzel', serif;
+    font-size: 1.1rem;
+    color: var(--accent);
+    margin-bottom: 10px;
+    line-height: 1.3;
+  }
+
+  .card-position {
+    display: inline-block;
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+    letter-spacing: 0.1em;
+  }
+
+  .position-upright {
+    background: rgba(144,224,176,0.1);
+    color: var(--upright);
+    border: 1px solid rgba(144,224,176,0.3);
+  }
+
+  .position-reversed {
+    background: rgba(255,179,71,0.1);
+    color: var(--reversed);
+    border: 1px solid rgba(255,179,71,0.3);
+  }
+
+  .card-message {
+    font-size: 0.88rem;
+    line-height: 1.8;
+    color: var(--text);
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+  }
+
+  /* ===== もう一度ボタン ===== */
+  .again-btn {
+    display: block;
+    margin: 32px auto 0;
+    padding: 12px 32px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 30px;
+    color: var(--muted);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.85rem;
+    cursor: pointer;
+    letter-spacing: 0.15em;
+    transition: all 0.3s;
+  }
+
+  .again-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--glow);
+  }
+
+  /* ===== フッター ===== */
+  footer {
+    text-align: center;
+    margin-top: 60px;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    opacity: 0.5;
+  }
+
+  /* ===== レスポンシブ ===== */
+  @media (max-width: 480px) {
+    .container { padding: 32px 16px 60px; }
+    .form-area { padding: 24px 20px; }
+    .cards-wrapper { flex-direction: column; align-items: center; }
+    .card { min-width: unset; width: 100%; max-width: 100%; }
+    .mode-tab { font-size: 0.8rem; padding: 9px 6px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- タイトル -->
+  <header>
+    <span class="title-en">TAROT</span>
+    <span class="title-jp">タロット占い • 全78枚</span>
+    <div class="divider"></div>
+  </header>
+
+  <!-- フォーム -->
+  <div class="form-area">
+    <label class="form-label" for="question">あなたの問い</label>
+    <input
+      class="question-input"
+      id="question"
+      type="text"
+      placeholder="今日の私へのメッセージは？"
+    >
+
+    <label class="form-label">占い方</label>
+    <div class="mode-tabs">
+      <button type="button" class="mode-tab active" data-mode="1">🃏 1枚引き</button>
+      <button type="button" class="mode-tab" data-mode="3">🃏🃏🃏 3枚引き</button>
+    </div>
+
+    <select class="theme-select" id="theme-select">
+      <option value="過去/現在/未来">過去 · 現在 · 未来</option>
+      <option value="状況/障害/アドバイス">状況 · 障害 · アドバイス</option>
+      <option value="心/体/魂">心 · 体 · 魂</option>
+      <option value="答え/理由/アドバイス">Yes/No · 理由 · アドバイス</option>
+    </select>
+
+    <button type="button" class="draw-btn" id="draw-btn">✦ カードを引く ✦</button>
+  </div>
+
+  <!-- 結果 -->
+  <div id="result-area">
+    <p class="result-question" id="result-question"></p>
+    <div class="cards-wrapper" id="cards-wrapper"></div>
+    <button type="button" class="again-btn" id="again-btn">もう一度引く</button>
+  </div>
+
+  <footer>🃏 TAROT · 78 CARDS · MAJOR &amp; MINOR ARCANA</footer>
+</div>
+
+<script>
+// ================================================================
+// タロットカードデータ（全78枚）
+// ================================================================
+// JSの配列とオブジェクトで管理。
+// Pythonのリスト・辞書と同じ考え方やで！
+// Python: tarot_cards = [{"name": "愚者", ...}, ...]
+// JS:     const tarotCards = [{ name: "愚者", ... }, ...]
+
+const tarotCards = [
+  // ============ 大アルカナ 22枚 ============
+  { name:"愚者", number:"0", suit:"大アルカナ", emoji:"🌟",
+    upright:"まだ何者でもないからこそ、どこへでも行けるで！あんたの中には無限の可能性が眠っとるんや。根拠なんてなくてええ、直感信じて旅に出るときやで。怖がらんで大丈夫、白紙のページには何だって描けるんやから！",
+    reversed:"ちょっと待ちや！今のまま突っ走ると大事なもん見落とすで。自由と無責任は紙一重やからな。ちゃんと計画立てたら、あんたの冒険はもっとええもんになるはずやで。" },
+  { name:"魔術師", number:"I", suit:"大アルカナ", emoji:"🪄",
+    upright:"必要なもんは全部、もうあんたの手の中にあるで！あとは「やる」って決めるだけや。アイデア、言葉、柔軟な発想——それ全部組み合わせて、新しいこと始めるときやで！",
+    reversed:"才能持て余してへん？それか器用すぎて口先だけになってへん？ほんまにやりたいことに集中したら、あんたの魔法は絶対発動するで！" },
+  { name:"女教皇", number:"II", suit:"大アルカナ", emoji:"📖",
+    upright:"静かに心の声に耳澄ませてみ。答えは外やなくて、あんたの内側にあるんよ。知性と直感の両方使って、物事の裏側まで見通す力が今のあんたにはあるで。",
+    reversed:"考えすぎて頭でっかちになってへん？感情が揺れるんは自然なことやで。理想高く持ちすぎず、今の自分の気持ちに正直になってみ。" },
+  { name:"女帝", number:"III", suit:"大アルカナ", emoji:"🌺",
+    upright:"愛と豊かさがあんたを包んどるで！創造する力、育てる力が満ち溢れとるときや。人を惹きつける魅力もバリ高まっとる。美しいもん、心地ええもんを存分に楽しんでな！",
+    reversed:"与えすぎてへん？それとも自分へのご褒美が過剰になってへん？嫉妬やわがままが顔出すときは、ほんまに大切なもんを見つめ直すサインやで。" },
+  { name:"皇帝", number:"IV", suit:"大アルカナ", emoji:"👑",
+    upright:"今こそリーダーシップ発揮するときやで！はっきりしたビジョン持って、決断して、行動に移しや。地に足ついた計画と実行力が、あんたの夢を現実に変えていくで！",
+    reversed:"力の使い方間違えてへん？頑固になりすぎたり、人をコントロールしようとしたりしてへん？柔軟さ持つことで、もっと大きな器になれるはずやで。" },
+  { name:"法王", number:"V", suit:"大アルカナ", emoji:"⛩️",
+    upright:"信頼できるアドバイザーが現れる暗示やで。先人の知恵や伝統の中に、今のあんたに必要なヒントがあるんよ。謙虚に学ぶ姿勢が道を切り開いてくれるで！",
+    reversed:"誰かの言葉を鵜呑みにしてへん？常識やルールに縛られすぎて、自分の頭で考えること忘れてへん？たまには型破る勇気も必要やで。" },
+  { name:"恋人", number:"VI", suit:"大アルカナ", emoji:"💕",
+    upright:"心が動く出会いや選択のときやで！頭で考えるより、フィーリングに従って大事なもん選んでみ。信頼し合える関係が深まる予感やで！",
+    reversed:"迷いが出とるなぁ。誘惑に流されたり、優柔不断になったりしてへん？ほんまに大切なもんは何か、自分の心に聞いてみや。" },
+  { name:"戦車", number:"VII", suit:"大アルカナ", emoji:"🪖",
+    upright:"「これや！」って決めたら迷わず前へ行きや！困難あっても乗り越える力があんたにはあるで。エネルギッシュに突き進むことで、目標達成できるときや！",
+    reversed:"勢い余って暴走してへん？焦りや衝動に振り回されると、コントロール失ってまうで。一回ブレーキ踏んで、方向確認してみ。" },
+  { name:"正義", number:"VIII", suit:"大アルカナ", emoji:"⚖️",
+    upright:"バランスのとれた公平な判断ができるときやで。誠実であることが何よりの武器やねん。契約や試験にもええ結果が期待できるで！",
+    reversed:"偏った見方してへん？不公平な扱い受けたと感じるなら、まず自分自身が誠実であるか振り返ってみや。" },
+  { name:"隠者", number:"IX", suit:"大アルカナ", emoji:"🕯️",
+    upright:"一人の時間が必要なときやで。静かに内面を見つめることで、経験に裏打ちされた深い知恵が湧いてくるんよ。焦らず、自分のペースで答え探してみ。",
+    reversed:"孤立しすぎてへん？一人で抱え込まんと、信頼できる人に心開いてみや。引きこもっとるだけでは見えへん景色があるで。" },
+  { name:"運命の輪", number:"X", suit:"大アルカナ", emoji:"⚙️",
+    upright:"人生の転機きとるで！チャンスの波に乗るなら今やで。運命的な出会いや変化が起こる予感。流れに身を委ねてみや！",
+    reversed:"タイミングずれとるかもしれんなぁ。焦らんでええで。今は準備期間と捉えて、次のチャンスに備えることが大事やで。" },
+  { name:"力", number:"XI", suit:"大アルカナ", emoji:"🦁",
+    upright:"ほんまの強さってな、力で押すことやなくて、辛抱強く寄り添うことやねん。内なる信念と勇気で、どんな困難も乗り越えられるで。自分を信じてや！",
+    reversed:"ストレスに押しつぶされそうになってへん？自分を責めすぎんと、弱さ認めることも強さの一つやで。誰かの力借りることを怖がらんといてな。" },
+  { name:"吊られた男", number:"XII", suit:"大アルカナ", emoji:"🌀",
+    upright:"今は動けへん時期かもしれん。でもな、この停滞には意味があるねん。視点を変えることで、まったく新しい世界が見えてくるで。試練の先に実りが待っとるで！",
+    reversed:"我慢し続けることがほんまに正しいん？思い込みや固定観念から自分を解放してあげや。報われへん努力を手放す勇気も必要やで。" },
+  { name:"死神", number:"XIII", suit:"大アルカナ", emoji:"💀",
+    upright:"一つの章が終わりを迎えとるで。怖がらんといて。終わりは新しい始まりへの扉やねん。過去を手放すことで、次のステージに進む準備が整うで。",
+    reversed:"新しい風が吹き始めとるで！心機一転、再出発のときや。過去の痛みから解放されて、新しい出会いや可能性が見えてくるで！" },
+  { name:"節制", number:"XIV", suit:"大アルカナ", emoji:"🌊",
+    upright:"バランスと調和がテーマやで。異なるもんを上手に組み合わせる力があんたにはあるんよ。焦らず、自制心持って進むことで、ええ成果が生まれるで！",
+    reversed:"やりすぎ、飲みすぎ、使いすぎ——どっかで度超えてへん？節度取り戻すことで、心も体も整っていくで。" },
+  { name:"悪魔", number:"XV", suit:"大アルカナ", emoji:"😈",
+    upright:"何かに囚われてへん？執着、依存、物欲——その鎖はな、実は自分で外せるもんかもしれんで。ほんまに大切なもん見失わんといてな。",
+    reversed:"解放のときや！しがらみや悪い習慣を断ち切る力が湧いてきとるで。執着手放すことで、びっくりするくらい心が軽くなるで！" },
+  { name:"塔", number:"XVI", suit:"大アルカナ", emoji:"🗼",
+    upright:"予期せん大きな変化が来るかもしれんで。ショック受けるかもしれんけど、古い構造が壊れることで、ほんまに必要なもんが見えてくるねん。嵐の後には虹が出るで！",
+    reversed:"最悪の事態は避けられそうやで。変化への恐れを乗り越えて、自ら改革起こすことで、状況は好転していくで！" },
+  { name:"星", number:"XVII", suit:"大アルカナ", emoji:"⭐",
+    upright:"希望の光が見えとるで！疲れた心を癒して、夢を具体的に描いてみや。才能を活かすチャンスが近づいとるで。遠くても、あんたの星は確かに輝いとるんやで！",
+    reversed:"希望見失いかけてへん？疲れとるなら、無理せず休むことも大事やで。目的地が見えんくても、歩み止めなければいつか辿り着けるで。" },
+  { name:"月", number:"XVIII", suit:"大アルカナ", emoji:"🌙",
+    upright:"見えへんもんに注意してな。不安や恐れが心を曇らせとるかもしれん。曖昧な状況の中でも、直感を頼りに慎重に進むことが大事やで。",
+    reversed:"霧が晴れ始めとるで！不安の正体がわかれば、もう怖くないんよ。真実が明らかになって、心に安らぎが戻ってくるで！" },
+  { name:"太陽", number:"XIX", suit:"大アルカナ", emoji:"☀️",
+    upright:"最高に輝くときやで！！成功、喜び、元気いっぱいのカードや。あんたの存在そのものが周りを明るく照らしとるで。自信持って、堂々と進んでな！",
+    reversed:"ちょっと調子乗りすぎてへん？明るさの裏で計画性に欠けとる部分があるかも。でも大丈夫、太陽は曇っても太陽や。基本的にはめっちゃポジティブなカードやで！" },
+  { name:"審判", number:"XX", suit:"大アルカナ", emoji:"👼",
+    upright:"人生のステージが一段上がるときやで！過去の経験すべてが今、実を結ぼうとしとるんよ。内なる呼びかけに応えて、新しい自分として立ち上がりや！",
+    reversed:"チャンス活かしきれてへんかもしれんなぁ。過去への後悔に囚われんと、前向く勇気持ってや。決断するんは今やで！" },
+  { name:"世界", number:"XXI", suit:"大アルカナ", emoji:"🌍",
+    upright:"おめでとう！！一つのサイクルが完成するで！望んどった最高の結果が得られるときや。達成感と満足感に包まれるで。ほんでまた新しい旅が始まるんやで！",
+    reversed:"あと一歩のところで足踏みしてへん？完璧求めすぎんと、今できることを認めてあげや。視野広げることで、突破口が見えてくるで！" },
+  // ============ ワンド（火・情熱・行動）14枚 ============
+  { name:"ワンドのエース", number:"Ace", suit:"ワンド", emoji:"🔥",
+    upright:"情熱の炎が灯る瞬間やで！新しいひらめきや衝動がブワーッと湧いてきとるんよ。このエネルギー信じて、とにかく一歩踏み出してみや。冒険の始まりやで！",
+    reversed:"やりたい気持ちはあるのに動き出されへん。ストレス溜まっとるサインかもな。無理に火ぃつけようとせんと、自然に燃え上がるタイミング待ってもええんやで。" },
+  { name:"ワンドの2", number:"2", suit:"ワンド", emoji:"🔥",
+    upright:"次の展開見据えて作戦練るときやで。実力と経験活かして、大きなビジョン描きや。戦略的に動くことで、新しい領域が開けてくるで！",
+    reversed:"見通し甘なってへん？計画と実力のバランス崩れとるかもな。焦らんと足元固めてから前に進みや。" },
+  { name:"ワンドの3", number:"3", suit:"ワンド", emoji:"🔥",
+    upright:"前向きなエネルギーで物事が動き出しとるで！人との繋がりやコミュニケーションを通じて、チャンスが広がっていくで。積極的にアピールしてみや！",
+    reversed:"言葉の行き違いに注意やで。伝えたいことがうまく伝わらんで、もどかしい思いするかもしれん。丁寧なコミュニケーション心がけてな。" },
+  { name:"ワンドの4", number:"4", suit:"ワンド", emoji:"🔥",
+    upright:"穏やかな幸せが来とるで！身近な人との絆を大事にするときやねん。お祝いごとや楽しい集まりがありそうや。素直に喜び分かち合おうや！",
+    reversed:"逆位置でも基本ハッピーやで。ちょっとした意見の食い違いはあるかもしれんけど、大きな問題にはならへん。リラックスしとき！" },
+  { name:"ワンドの5", number:"5", suit:"ワンド", emoji:"🔥",
+    upright:"意見がぶつかり合う時期やな。でもこの衝突は成長のために必要なもんやで。競争の中でこそ磨かれる力があるんよ。正々堂々と向き合ってみや！",
+    reversed:"争い避けて妥協する道を選ぶときやな。完全な解決やないかもしれんけど、今は一旦収めるのが賢明やで。" },
+  { name:"ワンドの6", number:"6", suit:"ワンド", emoji:"🔥",
+    upright:"努力が報われて勝利を手にするときやで！！周りからの評価もバリ高まっとる。自信持って成果受け取りや。凱旋パレードの気分やで！",
+    reversed:"思ったような成果出てへんかもな。過労にも注意やで。無理しすぎんと、一回立ち止まってエネルギー充電しや。" },
+  { name:"ワンドの7", number:"7", suit:"ワンド", emoji:"🔥",
+    upright:"ライバル多い中、立場守るための闘いが続いとるなぁ。プレッシャーでかいけど、信念持って粘り強く戦い続けてや。まだあんたは有利な位置におるんやで！",
+    reversed:"援軍来ーへん、心細い状況やな。弱気になりそうやけど、ここで諦めたら今までの努力が水の泡やで。もうひと踏ん張りや！" },
+  { name:"ワンドの8", number:"8", suit:"ワンド", emoji:"🔥",
+    upright:"物事が急展開するで！メールや連絡、移動とか、スピーディーな動きがキーワードや。この流れに乗り遅れんようにな。引っ越しや旅行の暗示もあるで！",
+    reversed:"予定通りにいかへん、情報が入ってこーへん。焦り出るかもしれんけど、早とちりは禁物やで。確認怠らんようにな。" },
+  { name:"ワンドの9", number:"9", suit:"ワンド", emoji:"🔥",
+    upright:"過去の傷抱えながらも、警戒緩めずに守りに徹しとるときやな。精神的に張り詰めとるけど、その慎重さが今のあんたを守っとるんやで。",
+    reversed:"ガードが甘なっとるで。同じ失敗繰り返さんように、過去の経験活かしてや。でも守りに入りすぎて攻め忘れんようにな！" },
+  { name:"ワンドの10", number:"10", suit:"ワンド", emoji:"🔥",
+    upright:"責任と重圧を一人で背負い込んでへん？キャパの限界知ることも大事やで。誰かに頼ること、荷物分散させること考えてみや。",
+    reversed:"荷ぃ重すぎて潰れそうやん。思い切って手放してみや。全部自分でやる必要ないんやで。助け求めることは弱さやないで！" },
+  { name:"ワンドのペイジ", number:"Page", suit:"ワンド", emoji:"🔥",
+    upright:"やる気と冒険心に満ちた新スタートやで！まだ具体的な形は見えへんけど、ワクワクする気持ちを大事にしてや。嬉しい知らせが届くかもな！",
+    reversed:"衝動的で計画性に欠けとるかも。三日坊主にならんように、小さい目標から確実にいこうや。偽情報にも要注意やで！" },
+  { name:"ワンドのナイト", number:"Knight", suit:"ワンド", emoji:"🔥",
+    upright:"強い意志持って果敢に突き進むときやで！情熱的でストレートな行動が状況を大きく動かすで。冒険心全開で、未知の世界に飛び込んでみや！",
+    reversed:"熱なりすぎて周り見えてへんのちゃう？暴走や衝動的な行動は事故の元やで。ちょっと冷静になって、深呼吸してみ。" },
+  { name:"ワンドのクイーン", number:"Queen", suit:"ワンド", emoji:"🔥",
+    upright:"華やかで圧倒的な存在感やで！自信と情熱にあふれて、周囲を惹きつけるリーダーや。自分らしさを堂々と表現して、人を導いていきや！",
+    reversed:"目立ちたい気持ちが空回りしてへん？見栄張りすぎると、ほんまの魅力が隠れてまうで。等身大の自分で勝負してみや。" },
+  { name:"ワンドのキング", number:"King", suit:"ワンド", emoji:"🔥",
+    upright:"ビジョンと行動力を兼ね備えたリーダーやで。大きな志持って、堂々と組織や人を率いていくときや。あんたの決断力が周囲に安心感を与えるで！",
+    reversed:"ワンマンになってへん？人の意見に耳傾けんと、ごり押しするんは逆効果やで。権力は責任とセットやっちゅうこと忘れんといてな。" },
+  // ============ カップ（水・感情・愛）14枚 ============
+  { name:"カップのエース", number:"Ace", suit:"カップ", emoji:"💧",
+    upright:"心の泉から新しい感情が湧き上がっとるで！恋の始まり、インスピレーションの開花やねん。純粋でキラキラした気持ちを大事にしてな！",
+    reversed:"感情が空回りしとるかもな。片思いや思い込みに注意やで。心が満たされへん時は、まず自分自身を愛することから始めてみや。" },
+  { name:"カップの2", number:"2", suit:"カップ", emoji:"💧",
+    upright:"相思相愛、心が通じ合う素敵な関係やで！お互いを理解して尊重し合えるパートナーシップが築かれとるんよ。信頼と共感が深まるときや！",
+    reversed:"気持ちがすれ違い始めとるなぁ。相手と本音で話し合ってみや。見せかけの関係では、ほんまの幸せは得られへんで。" },
+  { name:"カップの3", number:"3", suit:"カップ", emoji:"💧",
+    upright:"仲間との楽しいひとときやで！お祝いごとや飲み会で素敵な出会いがありそうや。みんなで喜び分かち合おうや！友情の輪が広がるときやで！",
+    reversed:"楽しみすぎて羽目外してへん？飲みすぎ、遊びすぎにご注意やで。三角関係のトラブルにも気ぃつけてな。" },
+  { name:"カップの4", number:"4", suit:"カップ", emoji:"💧",
+    upright:"マンネリや倦怠感感じとるかもな。目の前にあるチャンスに気づけてへん可能性あるで。新鮮な気持ちで周り見渡してみや！",
+    reversed:"目が覚めるような気づきが来るで！新しい可能性に心を開くことで、停滞しとった状況が動き出すで！" },
+  { name:"カップの5", number:"5", suit:"カップ", emoji:"💧",
+    upright:"失望や喪失感感じるときやな。でもな、全部失ったわけやないんよ。まだ残っとるもんに目を向けてみや。そこに希望の光が見えるはずやで。",
+    reversed:"悲しみから立ち直り始めとるで！新しい方向性に気づいて、前向く力が戻ってきとるんよ。回復の兆しが見えとるで！" },
+  { name:"カップの6", number:"6", suit:"カップ", emoji:"💧",
+    upright:"懐かしい思い出が心を温めてくれるで。初心に返ることで、今の自分に必要なもんが見えてくるんよ。素朴で純粋な気持ちを大事にしてな。",
+    reversed:"過去にしがみつくのはもうやめや。美化された記憶に浸るより、今と未来に目向けてや。大人としての一歩踏み出すときやで。" },
+  { name:"カップの7", number:"7", suit:"カップ", emoji:"💧",
+    upright:"あれもこれもと欲張って、気持ちがまとまらへん状態やな。夢見るのは素敵やけど、現実とのバランスも大事やで。一つに絞る覚悟持ってみや。",
+    reversed:"夢から覚めて現実見えてきたで！目標が定まって、地に足ついた選択ができるようになるで。具体的な行動に移すときや！" },
+  { name:"カップの8", number:"8", suit:"カップ", emoji:"💧",
+    upright:"今の場所に留まる理由がなくなったときやね。もっと深いもん、本質的なもんを求めて旅立つ決意やで。勇気持って次のステージ行こうや！",
+    reversed:"離れたいのに離れられへん。諦めつかんでしがみついてへん？固執手放すことで、新しい景色が広がるで。" },
+  { name:"カップの9", number:"9", suit:"カップ", emoji:"💧",
+    upright:"願いが叶うラッキーカードやで！！努力が報われて、満足感と幸福に包まれるで。自信持って成果受け取ってな。心からの充実感味わえるときやで！",
+    reversed:"幸せに慣れすぎて感謝忘れてへん？もっともっとと欲張ると、今ある幸せ見失ってまうで。足るを知ることやで。" },
+  { name:"カップの10", number:"10", suit:"カップ", emoji:"💧",
+    upright:"愛に満ちた最高のカードやで！！家族や仲間との絆、心の安らぎ、穏やかな暮らし。見返り求めへん無償の愛が、あんたの周りに虹かけとるで！",
+    reversed:"基本幸せやけど、ちょっと物足りなさ感じるかもな。平穏な日常に感謝しつつ、小さな変化を楽しんでみや。" },
+  { name:"カップのペイジ", number:"Page", suit:"カップ", emoji:"💧",
+    upright:"感受性豊かで優しい心やで。直感的なひらめきやメッセージが届くかもしれんで。芸術的な感性もバリ高まっとる。かわいいもん、美しいもんに、素直にときめいてみてな！",
+    reversed:"感情的に未成熟な部分が出とるかも。甘えすぎたり、だらしなくなったりしてへん？自分の足で立つこと意識してや。" },
+  { name:"カップのナイト", number:"Knight", suit:"カップ", emoji:"💧",
+    upright:"ロマンチックで魅力的な存在の登場やで。愛のある行動、心に響くアプローチがあるかもな。感受性豊かな時期やで！",
+    reversed:"甘い言葉に惑わされてへん？見せかけの優しさや不誠実な態度に注意やで。気持ちにつけ込まれんようにな。" },
+  { name:"カップのクイーン", number:"Queen", suit:"カップ", emoji:"💧",
+    upright:"深い共感力と包容力の持ち主やで。人の気持ちに寄り添って、癒しを与える存在やねん。直感信じて、優しさで周りを包んでいきや！",
+    reversed:"感情に振り回されてへん？人に尽くしすぎて自分見失わんといてな。自分の心も大事にケアしてあげや。" },
+  { name:"カップのキング", number:"King", suit:"カップ", emoji:"💧",
+    upright:"深い愛情と洞察力持つ、慈悲深いリーダーやで。感受性の豊かさが人の心動かして、創造的な成果生み出すんよ。人を癒す力があるときやで。",
+    reversed:"感情コントロールできへんくなってへん？依存や現実逃避に注意やで。お酒に逃げるんやなくて、ほんまの問題と向き合ってや。" },
+  // ============ ソード（風・思考・知性）14枚 ============
+  { name:"ソードのエース", number:"Ace", suit:"ソード", emoji:"⚔️",
+    upright:"知性と決意が冴えわたる始まりやで！鋭い思考力で真実見極めて、立ち向かう勇気持つときや。アイデアや戦略がバリ冴え渡っとるで。ズバリと核心突く力があるで！",
+    reversed:"考えがまとまらんで混乱しとるなぁ。鋭い言葉が自分や人を傷つけてまうこともあるで。攻撃的になりすぎんように気ぃつけてな。" },
+  { name:"ソードの2", number:"2", suit:"ソード", emoji:"⚔️",
+    upright:"二つの選択肢の間で揺れとるなぁ。決断先送りにしとるけど、様子見るのも一つの戦略やで。ただ、長くは続けられへんで。",
+    reversed:"そろそろ動き出すときが来とるで。感情のバランス崩れそうやけど、膠着状態から脱出するために一歩踏み出す覚悟持ってや。" },
+  { name:"ソードの3", number:"3", suit:"ソード", emoji:"⚔️",
+    upright:"心が痛む出来事があるかもしれんなぁ。別れや孤独感感じるとき。でもな、この痛みは成長のための通過点やで。傷を受け入れることで前に進めるんよ。",
+    reversed:"傷ついた心が癒え始めとるで。整理がついて、新しい方向に踏み出す準備ができてきたんよ。不要なもん手放して、必要なもん選んでいきや。" },
+  { name:"ソードの4", number:"4", suit:"ソード", emoji:"⚔️",
+    upright:"お休み必要なときやで。心と体休ませて、エネルギー回復させや。今は戦わんと、静かに英気を養う時期やで。メンテナンスの時間やと思ったらええよ。",
+    reversed:"休息期間終わって、再始動のときやで！気力が戻ってきとるで。充電完了、さあ動き出そうや！" },
+  { name:"ソードの5", number:"5", suit:"ソード", emoji:"⚔️",
+    upright:"勝利の裏で何か犠牲にしてへん？卑怯な手段や裏取引に注意やで。短期的な勝ちは長期的な損失になることもあるんよ。正々堂々と向き合ってや。",
+    reversed:"策略が裏目に出て痛い目にあうかもしれんで。自暴自棄にならんと、正直に向き合うことで状況立て直せるで。" },
+  { name:"ソードの6", number:"6", suit:"ソード", emoji:"⚔️",
+    upright:"困難な状況から距離を置くときやで。逃げるが勝ちって言葉もあるやろ。争い避けて新しい環境に移ることが、今は最善の選択かもしれんで。",
+    reversed:"問題から逃げ切れずにおるなぁ。堂々巡りに陥ってへん？向き合う勇気持つか、新しいアプローチ考えてみや。" },
+  { name:"ソードの7", number:"7", suit:"ソード", emoji:"⚔️",
+    upright:"戦略的に、そして慎重に立ち回る必要があるで。正面突破だけが方法やないんよ。たまには頭使って、賢く切り抜けることも大事やで。",
+    reversed:"隠しとったことがバレるかもしれんで。罪悪感あるなら、正直に打ち明ける方が気持ち楽になるで。良心の声に従ってな。" },
+  { name:"ソードの8", number:"8", suit:"ソード", emoji:"⚔️",
+    upright:"八方塞がりで身動き取れへん気分やな。でもな、その制限はほんまに存在するもんなん？思い込みの目隠し外したら、実は出口見えてるかもしれんで。",
+    reversed:"束縛から解放される兆しやで！新しい視点得ることで、「なんや、自分で縛ってただけやったんか」って気づけるで。" },
+  { name:"ソードの9", number:"9", suit:"ソード", emoji:"⚔️",
+    upright:"不安や心配で夜も眠れへんのやないか。考えすぎて精神的に追い詰められてへん？一人で抱え込まんと、信頼できる人に話聴いてもらうことが大事やで。",
+    reversed:"不安の正体が見え始めとるで。最悪の事態想像しとったけど、実際はそこまでひどくないかもしれんで。少しずつ光が差してきとるで。" },
+  { name:"ソードの10", number:"10", suit:"ソード", emoji:"⚔️",
+    upright:"どん底の状態やな。でもな、これ以上悪くなりようがないっちゅうことは、ここから上がるしかないんやで。明けへん夜はないで、夜明けはもうすぐやで！",
+    reversed:"最悪の時期を脱しつつあるで。ゆっくりでええから、立ち上がってや。改善の兆し見え始めとるで。やっかいごとにも出口はあるんやで！" },
+  { name:"ソードのペイジ", number:"Page", suit:"ソード", emoji:"⚔️",
+    upright:"知的好奇心旺盛で、情報収集能力バリ高いで。新しいニュースやアイデア持ってくる存在やねん。SNSやネット関連にも縁ありそうや。常にアンテナ張っとってな！",
+    reversed:"情報の扱い方に注意やで。軽率な発言やフェイクニュースに振り回されんといてな。言葉には責任持つことが大事やで。" },
+  { name:"ソードのナイト", number:"Knight", suit:"ソード", emoji:"⚔️",
+    upright:"頭の回転速くて行動力も抜群やで。斬新なアイデアと発信力で状況を一気に動かすで！素早い判断と決断が求められるとき。スピード感が武器になるで！",
+    reversed:"視野狭なってへん？攻撃的な態度や偏った見方は味方失う原因になるで。もうちょい柔軟に、人の話にも耳傾けてや。" },
+  { name:"ソードのクイーン", number:"Queen", suit:"ソード", emoji:"⚔️",
+    upright:"鋭い知性と自立心持つ存在やで。経験に裏打ちされた公平な判断力があんたにはあるんよ。一人でも強く生きていける力あるで。真実を恐れんといてな。",
+    reversed:"厳しすぎる態度が周り遠ざけとるかもしれんで。知性は武器にもなるけど、冷たさにもなるんよ。温かさ忘れんといてな。" },
+  { name:"ソードのキング", number:"King", suit:"ソード", emoji:"⚔️",
+    upright:"冷静で論理的、揺るがへん信念の持ち主やで。公正な判断力で人を導くリーダーや。知的な権威持って、理性でリードしていきや！",
+    reversed:"冷酷になりすぎてへん？感情排除しすぎると人の心離れてまうで。権力振りかざすんやなくて、思いやりも大事にしてな。" },
+  // ============ ペンタクル（地・お金・現実）14枚 ============
+  { name:"ペンタクルのエース", number:"Ace", suit:"ペンタクル", emoji:"💰",
+    upright:"願いが形になるラッキーカードやで！仕事、お金、健康——現実的な豊かさの種が蒔かれるときや。チャンスのきっかけ見逃さんといてな。繁栄への第一歩やで！",
+    reversed:"チャンス逃してまうかもな。目先の利益に執着せんと、長期的な視点持ってや。お金への不安は計画立てることで和らぐで。" },
+  { name:"ペンタクルの2", number:"2", suit:"ペンタクル", emoji:"💰",
+    upright:"やりくり上手な時期やで！複数のこと同時にこなす柔軟性があるんよ。お金の流れをうまく回転させて、バランス保ちや。変化を楽しんでいこうや！",
+    reversed:"お金や時間の管理うまくいってへんかもな。状況の変化についていかれへんで、やりくり苦しなっとるで。一回立ち止まって整理してみや。" },
+  { name:"ペンタクルの3", number:"3", suit:"ペンタクル", emoji:"💰",
+    upright:"専門的なスキルが評価されるときやで！チームワークで成果上げられるで。技術磨いて社会に貢献することで、収入もアップするで！",
+    reversed:"実力不足を感じとるかもな。基礎から見直す謙虚さが大事やで。チームワーク悪いなら、コミュニケーション見直してみや。" },
+  { name:"ペンタクルの4", number:"4", suit:"ペンタクル", emoji:"💰",
+    upright:"安定した基盤守ることに力注ぐときやで。堅実に蓄えることも大事やねん。ただ、守りに入りすぎると成長の機会逃してまうこともあるで。",
+    reversed:"ケチケチしすぎてへん？執着や変化への恐れが可能性狭めとるで。たまには投資する勇気も必要やで。" },
+  { name:"ペンタクルの5", number:"5", suit:"ペンタクル", emoji:"💰",
+    upright:"経済的に厳しい時期やな。困難やピンチに見舞われるかもしれんで。でもな、助けは必ず近くにあるんよ。プライド捨てて、救いの手受け入れてや。",
+    reversed:"困難な状況から抜け出す兆しやで！求職活動や支援受けることで、状況が好転していくで。精神的な豊かさにも目向けてみや。" },
+  { name:"ペンタクルの6", number:"6", suit:"ペンタクル", emoji:"💰",
+    upright:"寛大さと公平さがテーマやで。与えることで豊かさが循環するんよ。支援や投資がさらなるチャンス生む時期や。見返り求めへん姿勢が信頼を生むで。",
+    reversed:"不公平な分配や偽善に注意やで。与えることと利用されることは違うんよ。ほんまの意味での公平さ考えてみや。" },
+  { name:"ペンタクルの7", number:"7", suit:"ペンタクル", emoji:"💰",
+    upright:"思い通りの成果出ーへんで、もどかしいかもしれんなぁ。でも諦めんといてや。やり方見直すことで、まだまだ改善の余地あるで。今は種まきの時期やで。",
+    reversed:"不満抱えるより、今あるもん認めて一歩前に進みや。視野広げて別のアプローチ試してみや。諦めなければ道は開けるで！" },
+  { name:"ペンタクルの8", number:"8", suit:"ペンタクル", emoji:"💰",
+    upright:"コツコツと腕磨くときやで。職人みたいに基礎叩き込んで、技能高めていきや。地道な努力が確実な成果につながるんよ。鍛錬怠らんようにな！",
+    reversed:"やる気出ーへん、飽きてもうた。技術不足感じるなら基本に立ち返ってみや。手抜きは結果に如実に表れるで。根気強くいこうや。" },
+  { name:"ペンタクルの9", number:"9", suit:"ペンタクル", emoji:"💰",
+    upright:"才能と魅力が認められて、物質的な豊かさ手にするときやで！努力が実を結んで、優雅な暮らしが実現する予感。自分へのご褒美楽しんでな！",
+    reversed:"手段選ばへん成功には代償が伴うで。お金目当ての関係や見栄の張りすぎに注意やで。ほんまの豊かさって何か考えてみや。" },
+  { name:"ペンタクルの10", number:"10", suit:"ペンタクル", emoji:"💰",
+    upright:"家族や組織の繁栄やで。代々受け継がれてきた財産や伝統の恩恵を受けるとき。安定した基盤の上に、さらなる発展が見込めるで。就職にもええ暗示やで！",
+    reversed:"家族間のトラブルや経済的な問題に注意やで。伝統に縛られすぎて柔軟性失ってへん？時代に合った変化も必要やで。" },
+  { name:"ペンタクルのペイジ", number:"Page", suit:"ペンタクル", emoji:"💰",
+    upright:"地道で誠実な努力家やで。まだ半人前かもしれんけど、コツコツ積み上げる姿勢が信頼勝ち取るんよ。新しいスキル学ぶのに最適な時期やで！",
+    reversed:"要領悪くて空回りしとるかもな。でも焦らんといてや。視野広げて、地道に一歩ずつ進んでいけば大丈夫やで。" },
+  { name:"ペンタクルのナイト", number:"Knight", suit:"ペンタクル", emoji:"💰",
+    upright:"堅実で責任感ある存在やで。派手さはないけど、コツコツと確実に成果積み上げていくんよ。信頼できるパートナーやプロジェクトとの出会いもありそうやで。",
+    reversed:"動き遅すぎる、融通きかへん。細かいことにこだわりすぎて全体見えへんくなってへん？もうちょい柔軟にいこうや。" },
+  { name:"ペンタクルのクイーン", number:"Queen", suit:"ペンタクル", emoji:"💰",
+    upright:"日々の暮らしを慈しむ母性的な存在やで。手間惜しまず、丁寧に物事育てていく力があるんよ。忍耐強くて思慮深い判断で周囲を安心させるで！",
+    reversed:"面倒くさがりになってへん？心身の健康にも気ぃ配ってや。執着や嫉妬心が顔出したら、一回リフレッシュしてみや。" },
+  { name:"ペンタクルのキング", number:"King", suit:"ペンタクル", emoji:"💰",
+    upright:"経験と実績に裏打ちされた成功者やで。経営手腕に優れて人望もあるリーダーや。豊かさ享受しつつ、社会に還元していく器の大きさがあるんよ！",
+    reversed:"お金や権力への執着強すぎてへん？古いやり方にしがみつくと時代に取り残されてまうで。柔軟さと謙虚さ忘れんといてな。" },
+];
+
+// ================================================================
+// JS：ユーティリティ関数
+// ================================================================
+
+// ランダムに1枚引く（Pythonの random.choice と同じ）
+// Math.random() → 0以上1未満の乱数
+// Math.floor()  → 小数点以下を切り捨て
+function randomChoice(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// 重複なしでn枚引く（Pythonの random.sample と同じ）
+function randomSample(arr, n) {
+  // Fisher-Yatesシャッフル（より均等なランダム化）
+  const shuffled = [...arr];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled.slice(0, n);
+}
+
+// ================================================================
+// JS：UI操作
+// ================================================================
+
+let currentMode = 1; // 1枚引き or 3枚引き
+
+// モードタブの切り替え
+const modeTabs = document.querySelectorAll('.mode-tab');
+modeTabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    modeTabs.forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentMode = parseInt(tab.dataset.mode);
+
+    // 3枚引きのときだけテーマ選択を表示
+    if (currentMode === 3) {
+      themeSelect.classList.add('visible');
+    } else {
+      themeSelect.classList.remove('visible');
+    }
+  });
+});
+
+// DOM要素をまとめて取得
+const questionInput  = document.getElementById('question');
+const resultArea     = document.getElementById('result-area');
+const cardsWrapper   = document.getElementById('cards-wrapper');
+const resultQuestion = document.getElementById('result-question');
+const themeSelect    = document.getElementById('theme-select');
+const drawBtn        = document.getElementById('draw-btn');
+const againBtn       = document.getElementById('again-btn');
+
+// カードを引くボタン
+drawBtn.addEventListener('click', () => {
+  const question = questionInput.value.trim();
+
+  // 質問の表示
+  if (question) {
+    resultQuestion.textContent = '📝 ' + question;
+    resultQuestion.style.display = 'block';
+  } else {
+    resultQuestion.textContent = '';
+    resultQuestion.style.display = 'none';
+  }
+
+  // カードをクリア
+  cardsWrapper.innerHTML = '';
+
+  if (currentMode === 1) {
+    // 1枚引き
+    const card = randomChoice(tarotCards);
+    const isReversed = Math.random() < 0.5;
+    cardsWrapper.appendChild(createCardEl(card, isReversed));
+  } else {
+    // 3枚引き
+    const theme = themeSelect.value;
+    const labels = theme.split('/');
+    const cards = randomSample(tarotCards, 3);
+
+    cards.forEach((card, i) => {
+      const isReversed = Math.random() < 0.5;
+      cardsWrapper.appendChild(createCardEl(card, isReversed, labels[i]));
+    });
+  }
+
+  // 結果エリアを表示
+  resultArea.style.display = 'block';
+
+  // スクロール
+  resultArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+// カードのHTML要素を作る関数
+function createCardEl(card, isReversed, label) {
+  const positionClass = isReversed ? 'position-reversed' : 'position-upright';
+  const positionText  = isReversed ? '逆位置 🔄' : '正位置 ✨';
+  const meaning       = isReversed ? card.reversed : card.upright;
+
+  const el = document.createElement('div');
+  el.className = 'card';
+  el.innerHTML = `
+    ${label ? `<div class="card-label">${label}</div>` : ''}
+    <div class="card-suit">${card.suit} · ${card.number}</div>
+    <span class="card-emoji">${card.emoji}</span>
+    <div class="card-name">${card.name}</div>
+    <span class="card-position ${positionClass}">${positionText}</span>
+    <div class="card-message">${meaning}</div>
+  `;
+  return el;
+}
+
+// もう一度ボタン
+againBtn.addEventListener('click', () => {
+  drawBtn.click();
+});
+</script>
+</body>
+</html>
