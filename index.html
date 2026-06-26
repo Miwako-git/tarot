@@ -341,6 +341,28 @@
     background: var(--glow);
   }
 
+  /* ===== AIローディング ===== */
+  .ai-loading {
+    text-align: center;
+    padding: 20px;
+    color: var(--accent);
+    font-size: 0.9rem;
+    letter-spacing: 0.1em;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.4; }
+    50%       { opacity: 1; }
+  }
+
+  .card-message.ai-mode {
+    border-left-color: var(--accent);
+    background: rgba(200,156,255,0.05);
+    font-size: 0.92rem;
+    line-height: 1.9;
+  }
+
   /* ===== フッター ===== */
   footer {
     text-align: center;
@@ -732,7 +754,7 @@ drawBtn.addEventListener('click', () => {
     // 1枚引き
     const card = randomChoice(tarotCards);
     const isReversed = Math.random() < 0.5;
-    cardsWrapper.appendChild(createCardEl(card, isReversed));
+    cardsWrapper.appendChild(createCardEl(card, isReversed, question));
   } else {
     // 3枚引き
     const theme = themeSelect.value;
@@ -741,7 +763,7 @@ drawBtn.addEventListener('click', () => {
 
     cards.forEach((card, i) => {
       const isReversed = Math.random() < 0.5;
-      cardsWrapper.appendChild(createCardEl(card, isReversed, labels[i]));
+      cardsWrapper.appendChild(createCardEl(card, isReversed, question, labels[i]));
     });
   }
 
@@ -752,11 +774,66 @@ drawBtn.addEventListener('click', () => {
   resultArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 
-// カードのHTML要素を作る関数
-function createCardEl(card, isReversed, label) {
+// ================================================================
+// Gemini API設定
+// ================================================================
+// ↓ここにAPIキーを貼ってな！
+const GEMINI_API_KEY = 'ここにAPIキーを貼る';
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+// ================================================================
+// Gemini APIに鑑定文を生成してもらう関数
+// ================================================================
+async function generateReading(card, isReversed, question, label) {
+  const position = isReversed ? '逆位置' : '正位置';
+  const cardMeaning = isReversed ? card.reversed : card.upright;
+
+  // Geminiへのプロンプト
+  const prompt = `あなたはコテコテの関西弁を話すプロのタロット占い師です。
+以下の情報をもとに、質問者への鑑定メッセージを関西弁で書いてください。
+
+【引いたカード】${card.name}（${card.suit} / ${card.number}）
+【位置】${position}
+【カードの基本的な意味】${cardMeaning}
+${label ? `【このカードのテーマ】${label}` : ''}
+${question ? `【質問】${question}` : '【質問】今日の私へのメッセージ'}
+
+条件：
+- コテコテの関西弁で（〜やで、〜やん、〜やねん、〜してみ、など）
+- 質問の内容にバチコン合わせた具体的な鑑定をしてな
+- 温かみがあって、前向きな気持ちになれるメッセージにしてな
+- 250〜300文字くらいで
+- 「鑑定します」「このカードは」などの前置きは不要、いきなり鑑定文から始めてな
+- 絵文字は使わんでええよ`;
+
+  try {
+    const res = await fetch(GEMINI_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.8, maxOutputTokens: 300 }
+      })
+    });
+
+    if (!res.ok) throw new Error('API Error: ' + res.status);
+
+    const data = await res.json();
+    return data.candidates[0].content.parts[0].text;
+
+  } catch (err) {
+    console.error('Gemini APIエラー:', err);
+    // エラー時はデフォルトの解説文を返す
+    return cardMeaning;
+  }
+}
+
+// ================================================================
+// カードのHTML要素を作る関数（AI鑑定つき）
+// ================================================================
+async function createCardEl(card, isReversed, question, label) {
   const positionClass = isReversed ? 'position-reversed' : 'position-upright';
   const positionText  = isReversed ? '逆位置 🔄' : '正位置 ✨';
-  const meaning       = isReversed ? card.reversed : card.upright;
 
   const el = document.createElement('div');
   el.className = 'card';
@@ -766,8 +843,17 @@ function createCardEl(card, isReversed, label) {
     <span class="card-emoji">${card.emoji}</span>
     <div class="card-name">${card.name}</div>
     <span class="card-position ${positionClass}">${positionText}</span>
-    <div class="card-message">${meaning}</div>
+    <div class="card-message ai-mode">
+      <span class="ai-loading">✦ 鑑定中やで... ✦</span>
+    </div>
   `;
+
+  // Gemini APIで鑑定文を生成（非同期）
+  const messageEl = el.querySelector('.card-message');
+  generateReading(card, isReversed, question, label).then(text => {
+    messageEl.innerHTML = text;
+  });
+
   return el;
 }
 
