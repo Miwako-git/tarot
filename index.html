@@ -892,7 +892,7 @@ function getApiKey() {
 }
 
 function getGeminiUrl() {
-  return `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${getApiKey()}`;
+  return `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${getApiKey()}`;
 }
 
 // ================================================================
@@ -940,7 +940,12 @@ ${question ? `【質問】${question}` : '【質問】今日の私へのメッ�
     if (!res.ok) throw new Error('API Error: ' + res.status);
 
     const data = await res.json();
-    return data.candidates[0].content.parts[0].text;
+    console.log('Gemini response:', JSON.stringify(data));
+    if (!data.candidates || !data.candidates[0]) {
+      throw new Error('No candidates in response');
+    }
+    const parts = data.candidates[0].content.parts;
+    return parts.map(p => p.text).join('');
 
   } catch (err) {
     console.error('Gemini APIエラー:', err);
