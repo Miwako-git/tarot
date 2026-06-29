@@ -373,6 +373,26 @@
     border-radius: 16px;
     padding: 20px 24px;
     margin-bottom: 16px;
+    transition: all 0.3s;
+  }
+
+  .api-area.collapsed {
+    padding: 12px 24px;
+    cursor: pointer;
+  }
+
+  .api-area.collapsed .api-input-row {
+    display: none;
+  }
+
+  .api-area.collapsed .api-status {
+    display: none;
+  }
+
+  .api-area.collapsed .api-label {
+    margin-bottom: 0;
+    color: var(--upright);
+    font-size: 0.8rem;
   }
 
   .api-label {
@@ -974,6 +994,17 @@ window.addEventListener('DOMContentLoaded', () => {
     apiKeyInput.value = saved;
     apiStatus.textContent = '✅ APIキー設定済みやで！';
     apiStatus.className = 'api-status ok';
+    // 保存済みなら折りたたむ
+    apiArea.classList.add('collapsed');
+    apiArea.title = 'クリックしてAPIキーを変更する';
+  }
+});
+
+// 折りたたみ時にクリックで展開
+apiArea.addEventListener('click', (e) => {
+  if (apiArea.classList.contains('collapsed')) {
+    apiArea.classList.remove('collapsed');
+    apiKeyInput.focus();
   }
 });
 
@@ -993,6 +1024,11 @@ apiSaveBtn.addEventListener('click', () => {
   localStorage.setItem('gemini_api_key', key);
   apiStatus.textContent = '✅ 保存したで！次から自動で読み込むわ';
   apiStatus.className = 'api-status ok';
+  // 保存したら折りたたむ
+  setTimeout(() => {
+    apiArea.classList.add('collapsed');
+    apiArea.title = 'クリックしてAPIキーを変更する';
+  }, 1000);
 });
 </script>
 </body>
